@@ -16,6 +16,7 @@ date를 포함한 모든 값은 integer입니다.
 
 우선 [CREON Plus] 공식 웹사이트를 참고하여 `계좌 개설`, `CREON HTS 설치` 등의 절차를 진행하여야 합니다.
 CREON Plus가 32bit 환경에서 지원되기 때문에 32bit Python이 필요합니다. Anaconda를 이용할 것을 권장드립니다.
+
 [CREON Plus]:http://money2.creontrade.com/e5/mboard/ptype_basic/plusPDS/DW_Basic_Read.aspx?boardseq=299&seq=35&page=1&searchString=&prd=&lang=8&p=8833&v=8639&m=9505
 
 1. Anaconda 32-bit 설치
