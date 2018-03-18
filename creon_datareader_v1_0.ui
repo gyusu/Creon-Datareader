@@ -165,7 +165,7 @@
       </rect>
      </property>
      <property name="text">
-      <string>./db/stock_price(minute).db</string>
+      <string>./db/stock_price(5min).db</string>
      </property>
     </widget>
     <widget class="QLineEdit" name="lineEdit_5">
@@ -217,17 +217,17 @@
      </property>
      <property name="geometry">
       <rect>
-       <x>530</x>
-       <y>36</y>
+       <x>520</x>
+       <y>30</y>
        <width>61</width>
        <height>19</height>
       </rect>
      </property>
      <property name="text">
-      <string>분봉</string>
+      <string>1분봉</string>
      </property>
      <property name="checked">
-      <bool>true</bool>
+      <bool>false</bool>
      </property>
     </widget>
     <widget class="QRadioButton" name="radioButton_2">
@@ -236,8 +236,8 @@
      </property>
      <property name="geometry">
       <rect>
-       <x>530</x>
-       <y>66</y>
+       <x>520</x>
+       <y>90</y>
        <width>61</width>
        <height>19</height>
       </rect>
@@ -257,6 +257,25 @@
      </property>
      <property name="text">
       <string>연결</string>
+     </property>
+    </widget>
+    <widget class="QRadioButton" name="radioButton_3">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>520</x>
+       <y>60</y>
+       <width>61</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>5분봉</string>
+     </property>
+     <property name="checked">
+      <bool>true</bool>
      </property>
     </widget>
    </widget>

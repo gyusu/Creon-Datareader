@@ -78,10 +78,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.db_path = self.lineEdit_4.text()
 
-        # .db 파일을 새로 생성할 경우에만 radioButton으로 일봉/분봉을 선택할 수 있게 함.
+        # .db 파일을 새로 생성할 경우에만 radioButton으로 일봉/1분봉/5분봉 을 선택할 수 있게 함.
         if not os.path.isfile(self.db_path):
             self.radioButton.setEnabled(True)
             self.radioButton_2.setEnabled(True)
+            self.radioButton_3.setEnabled(True)
 
         # 로컬 DB에 저장된 종목 정보 가져와서 dataframe으로 저장
         con = sqlite3.connect(self.db_path)
@@ -101,11 +102,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # 현재 db에 저장된 'date' column의 단위(분/일) 확인
         # 한 db 파일에 분봉 데이터와 일봉 데이터가 섞이지 않게 하기 위함
         if db_latest_list:
+            cursor.execute("SELECT date FROM {} ORDER BY date ASC LIMIT 2".format(db_code_list[0]))
+            date0, date1 = cursor.fetchall()
             self.radioButton.setEnabled(False)
             self.radioButton_2.setEnabled(False)
+            self.radioButton_3.setEnabled(False)
+
             # 날짜가 분 단위 인 경우
-            if db_latest_list[0] > 99999999:
-                self.radioButton.setChecked(True)
+            if date0[0] > 99999999:
+                if date1[0] - date0[0] == 5: # 5분 간격인 경우
+                    self.radioButton_3.setChecked(True)
+                else: # 1분 간격인 경우
+
+                    self.radioButton.setChecked(True)
             else:
                 self.radioButton_2.setChecked(True)
 
@@ -210,14 +219,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         else:
             fetch_code_df = self.sv_code_df
 
-        if self.radioButton.isChecked():
+        if self.radioButton.isChecked(): # 1분봉
             tick_unit = '분봉'
             count = 200000  # 서버 데이터 최대 reach 약 18.5만 이므로 (18/02/25 기준)
+            tick_range = 1
+        elif self.radioButton_3.isChecked(): # 5분봉
+            tick_unit = '분봉'
+            count = 100000
+            tick_range = 5
         else:
             tick_unit = '일봉'
             count = 10000  # 10000개면 현재부터 1980년 까지의 데이터에 해당함. 충분.
+            tick_range = 1
 
-        tick_range = 1
 
         with sqlite3.connect(self.db_path) as con:
             cursor = con.cursor()
