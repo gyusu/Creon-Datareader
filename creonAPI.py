@@ -46,7 +46,7 @@ class CpStockChart:
     def RequestDWM(self, code, dwm, count, caller: 'MainWindow', from_date=0):
         """
         :param code: 종목코드
-        :param dwm: 'd':일봉, 'w':주봉, 'm':월봉
+        :param dwm: 'D':일봉, 'W':주봉, 'M':월봉
         :param count: 요청할 데이터 개수
         :param caller: 이 메소드 호출한 인스턴스. 결과 데이터를 caller의 멤버로 전달하기 위함
         :return: None

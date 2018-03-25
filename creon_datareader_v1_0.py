@@ -78,11 +78,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.db_path = self.lineEdit_4.text()
 
-        # .db 파일을 새로 생성할 경우에만 radioButton으로 일봉/1분봉/5분봉 을 선택할 수 있게 함.
+        # .db 파일을 새로 생성할 경우에만 radioButton으로 1분/5분/일봉/.. 을 선택할 수 있게 함.
         if not os.path.isfile(self.db_path):
             self.radioButton.setEnabled(True)
             self.radioButton_2.setEnabled(True)
             self.radioButton_3.setEnabled(True)
+            self.radioButton_4.setEnabled(True)
+            self.radioButton_5.setEnabled(True)
 
         # 로컬 DB에 저장된 종목 정보 가져와서 dataframe으로 저장
         con = sqlite3.connect(self.db_path)
@@ -107,6 +109,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.radioButton.setEnabled(False)
             self.radioButton_2.setEnabled(False)
             self.radioButton_3.setEnabled(False)
+            self.radioButton_4.setEnabled(False)
+            self.radioButton_5.setEnabled(False)
 
             # 날짜가 분 단위 인 경우
             if date0[0] > 99999999:
@@ -115,7 +119,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 else: # 1분 간격인 경우
 
                     self.radioButton.setChecked(True)
-            else:
+            elif date0[0]%100 == 0: # 월봉인 경우
+                self.radioButton_5.setChecked(True)
+            elif date0[0]%10 == 0: # 주봉인 경우
+                self.radioButton_4.setChecked(True)
+            else: # 일봉인 경우
                 self.radioButton_2.setChecked(True)
 
         self.db_code_df = pd.DataFrame(
@@ -227,10 +235,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             tick_unit = '분봉'
             count = 100000
             tick_range = 5
-        else:
+        elif self.radioButton_2.isChecked(): # 일봉
             tick_unit = '일봉'
             count = 10000  # 10000개면 현재부터 1980년 까지의 데이터에 해당함. 충분.
             tick_range = 1
+        elif self.radioButton_4.isChecked(): # 주봉
+            tick_unit = '주봉'
+            count = 2000
+        else: # 월봉
+            tick_unit = '월봉'
+            count = 500
 
 
         with sqlite3.connect(self.db_path) as con:
@@ -251,6 +265,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         exit()
                 elif tick_unit == '분봉':  # 분봉 데이터 받기
                     if self.objStockChart.RequestMT(code[0], ord('m'), tick_range, count, self, from_date) == False:
+                        exit()
+                elif tick_unit == '주봉':  #주봉 데이터 받기
+                    if self.objStockChart.RequestDWM(code[0], ord('W'), count, self, from_date) == False:
+                        exit()
+                elif tick_unit == '월봉':  #주봉 데이터 받기
+                    if self.objStockChart.RequestDWM(code[0], ord('M'), count, self, from_date) == False:
                         exit()
 
                 df = pd.DataFrame(self.rcv_data, columns=['open', 'high', 'low', 'close', 'volume'],

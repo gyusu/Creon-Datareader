@@ -160,7 +160,7 @@
       <rect>
        <x>80</x>
        <y>30</y>
-       <width>341</width>
+       <width>291</width>
        <height>21</height>
       </rect>
      </property>
@@ -217,7 +217,7 @@
      </property>
      <property name="geometry">
       <rect>
-       <x>520</x>
+       <x>460</x>
        <y>30</y>
        <width>61</width>
        <height>19</height>
@@ -236,8 +236,8 @@
      </property>
      <property name="geometry">
       <rect>
-       <x>520</x>
-       <y>90</y>
+       <x>460</x>
+       <y>60</y>
        <width>61</width>
        <height>19</height>
       </rect>
@@ -249,8 +249,8 @@
     <widget class="QPushButton" name="pushButton_2">
      <property name="geometry">
       <rect>
-       <x>430</x>
-       <y>29</y>
+       <x>380</x>
+       <y>30</y>
        <width>71</width>
        <height>23</height>
       </rect>
@@ -265,8 +265,8 @@
      </property>
      <property name="geometry">
       <rect>
-       <x>520</x>
-       <y>60</y>
+       <x>530</x>
+       <y>30</y>
        <width>61</width>
        <height>20</height>
       </rect>
@@ -275,7 +275,45 @@
       <string>5분봉</string>
      </property>
      <property name="checked">
-      <bool>true</bool>
+      <bool>false</bool>
+     </property>
+    </widget>
+    <widget class="QRadioButton" name="radioButton_4">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>530</x>
+       <y>60</y>
+       <width>61</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>주봉</string>
+     </property>
+     <property name="checked">
+      <bool>false</bool>
+     </property>
+    </widget>
+    <widget class="QRadioButton" name="radioButton_5">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>460</x>
+       <y>90</y>
+       <width>61</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>월봉</string>
+     </property>
+     <property name="checked">
+      <bool>false</bool>
      </property>
     </widget>
    </widget>
