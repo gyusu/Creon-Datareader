@@ -20,15 +20,20 @@ CREON Plus가 32bit 환경에서 지원되기 때문에 32bit Python이 필요�
 [CREON Plus]:http://money2.creontrade.com/e5/mboard/ptype_basic/plusPDS/DW_Basic_Read.aspx?boardseq=299&seq=35&page=1&searchString=&prd=&lang=8&p=8833&v=8639&m=9505
 
 1. Anaconda 32-bit 설치
-	만약 Anaconda 64-bit을 사용하고 있는 경우
-    - 32-bit 추가 설치 또는,
-    - `set CONDA_FORCE_32BIT`을 이용하여 32-bit 가상환경을 만들어야 합니다.
+
+만약 Anaconda 64-bit을 사용하고 있는 경우
+
+- 32-bit 추가 설치 또는,
+
+- `set CONDA_FORCE_32BIT`을 이용하여 32-bit 가상환경을 만들어야 합니다.
+    
 2. 32-bit anaconda `python=3.6` 가상환경에서
 	`conda install`을 이용하여 `pyqt5`, `sqlite3`, `pandas`, `pywin32` 설치
     `conda install`이 안되는 모듈은 `pip`로 설치하시면 됩니다.
 
 ## 개발 환경
 OS: `WINDOW 10`
+
 Python: `Python3.6.4` in `Anaconda3(build version 3.4.1) 32bit`
 `pandas 0.22.0` `pyqt: 5.6.0` `pywin32: 222` `sqlite: 3.22.0`
 
