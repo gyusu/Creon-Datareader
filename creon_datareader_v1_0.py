@@ -14,6 +14,7 @@ import creonAPI
 import decorators
 from pandas_to_pyqt_table import PandasModel
 from creon_datareader_v1_0_ui import Ui_MainWindow
+from utils import is_market_open, available_latest_date
 
 # .ui 파일에서 직접 클래스 생성하는 경우 주석 해제
 # Ui_MainWindow = uic.loadUiType("creon_datareader_v0_1.ui")[0]
@@ -224,8 +225,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def update_price_db(self, filtered=False):
         if filtered:
             fetch_code_df = self.f_sv_code_df
+            db_code_df = self.f_db_code_df
         else:
             fetch_code_df = self.sv_code_df
+            db_code_df = self.db_code_df
+
+        if not is_market_open():
+            latest_date = available_latest_date()
+            print(latest_date)
+            # 이미 DB 데이터가 최신인 종목들은 가져올 목록에서 제외한다
+            already_up_to_date_codes = db_code_df.loc[db_code_df['갱신날짜']==latest_date]['종목코드'].values
+            fetch_code_df = fetch_code_df.loc[fetch_code_df['종목코드'].apply(lambda x: x not in already_up_to_date_codes)]
 
         if self.radioButton.isChecked(): # 1분봉
             tick_unit = '분봉'
@@ -250,9 +260,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         with sqlite3.connect(self.db_path) as con:
             cursor = con.cursor()
 
-            for i, code in fetch_code_df.iterrows():
+            for i ,(_, code) in enumerate(fetch_code_df.iterrows()):
                 self.update_status_msg = '[{}/{}]: [{}] {}'.\
-                    format(i, len(fetch_code_df), code[0], code[1])
+                    format(i+1, len(fetch_code_df), code[0], code[1])
                 print(self.update_status_msg)
 
                 from_date = 0
@@ -262,16 +272,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 if tick_unit == '일봉':  # 일봉 데이터 받기
                     if self.objStockChart.RequestDWM(code[0], ord('D'), count, self, from_date) == False:
-                        exit()
+                        continue
                 elif tick_unit == '분봉':  # 분봉 데이터 받기
                     if self.objStockChart.RequestMT(code[0], ord('m'), tick_range, count, self, from_date) == False:
-                        exit()
+                        continue
                 elif tick_unit == '주봉':  #주봉 데이터 받기
                     if self.objStockChart.RequestDWM(code[0], ord('W'), count, self, from_date) == False:
-                        exit()
+                        continue
                 elif tick_unit == '월봉':  #주봉 데이터 받기
                     if self.objStockChart.RequestDWM(code[0], ord('M'), count, self, from_date) == False:
-                        exit()
+                        continue
 
                 df = pd.DataFrame(self.rcv_data, columns=['open', 'high', 'low', 'close', 'volume'],
                                   index=self.rcv_data['date'])
