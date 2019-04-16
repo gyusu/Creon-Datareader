@@ -77,6 +77,10 @@ class CpStockChart:
                 for col_idx, col in enumerate(rq_column):
                     rcv_data[col].append(self.objStockChart.GetDataValue(col_idx, i))
 
+            if len(rcv_data['date']) == 0:  # 데이터가 없는 경우
+                print(code, '데이터 없음')
+                return False
+
             # rcv_batch_len 만큼 받은 데이터의 가장 오래된 date
             rcv_oldest_date = rcv_data['date'][-1]
 
@@ -94,7 +98,7 @@ class CpStockChart:
                 break
 
         caller.rcv_data = rcv_data  # 받은 데이터를 caller의 멤버에 저장
-        return
+        return True
 
     # 차트 요청 - 분간, 틱 차트
     @check_PLUS_status
@@ -134,6 +138,10 @@ class CpStockChart:
                 for col_idx, col in enumerate(rq_column):
                     rcv_data[col].append(self.objStockChart.GetDataValue(col_idx, i))
 
+            if len(rcv_data['date']) == 0:  # 데이터가 없는 경우
+                print(code, '데이터 없음')
+                return False
+
             # len 만큼 받은 데이터의 가장 오래된 date
             rcv_oldest_date = int('{}{:04}'.format(rcv_data['date'][-1], rcv_data['time'][-1]))
 
@@ -155,7 +163,7 @@ class CpStockChart:
                  rcv_data['date'], rcv_data['time']))
         del rcv_data['time']
         caller.rcv_data = rcv_data  # 받은 데이터를 caller의 멤버에 저장
-        return
+        return True
 
 # 종목코드 관리하는 클래스
 class CpCodeMgr:
