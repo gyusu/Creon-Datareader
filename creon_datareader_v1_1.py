@@ -13,7 +13,7 @@ from PyQt5 import uic
 import creonAPI
 import decorators
 from pandas_to_pyqt_table import PandasModel
-from creon_datareader_v1_0_ui import Ui_MainWindow
+from creon_datareader_v1_1_ui import Ui_MainWindow
 from utils import is_market_open, available_latest_date
 
 # .ui 파일에서 직접 클래스 생성하는 경우 주석 해제
@@ -36,11 +36,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.timer_1s.start(1000)
         self.timer_1s.timeout.connect(self.timeout_1s)
 
-        # label '종목코드' 오른쪽 lineEdit 값이 변경 될 시 실행될 함수 연결
-        self.lineEdit.textChanged.connect(self.codeEditChanged)
-
-        # pushButton '실행'이 클릭될 시 실행될 함수 연결
-        self.pushButton.clicked.connect(self.get_price_db)
 
         # 서버에 존재하는 종목코드 리스트와 로컬DB에 존재하는 종목코드 리스트
         self.sv_code_df = pd.DataFrame()
@@ -56,8 +51,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.db_path = ''
 
-        # pushButton '연결'이 클릭될 시 실행될 함수 연결
+        # 'db 경로' 우측 pushButton '연결'이 클릭될 시 실행될 함수 연결
         self.pushButton_2.clicked.connect(self.connect_code_list_view)
+
+        # '종목리스트 경로' pushButton '연결'이 클릭될 시 실행될 함수 연결
+        self.pushButton_8.clicked.connect(self.load_code_list)
 
         # '종목 필터' 오른쪽 lineEdit이 변경될 시 실행될 함수 연결
         self.lineEdit_5.returnPressed.connect(self.filter_code_list_view)
@@ -140,22 +138,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.lineEdit_5.setText('')
 
-    # 종목 필터(검색)을 한 뒤 table view를 갱신하는 함수
-    def filter_code_list_view(self):
-        keyword = self.lineEdit_5.text()
-
-        if len(keyword) == 0:
-            self.tableView.setModel(self.sv_view_model)
-            self.tableView_2.setModel(self.db_view_model)
-            return
-
+    def _filter_code_list_view(self, keyword, reset=True):
         # could be improved
-        self.f_sv_code_df = pd.DataFrame(columns=('종목코드', '종목명'))
+
+        if reset:
+            self.f_sv_code_df = pd.DataFrame(columns=('종목코드', '종목명'))
         for i, row in self.sv_code_df.iterrows():
             if keyword in row['종목코드'] + row['종목명']:
                 self.f_sv_code_df = self.f_sv_code_df.append(row, ignore_index=True)
 
-        self.f_db_code_df = pd.DataFrame(columns=('종목코드', '종목명', '갱신날짜'))
+        if reset:
+            self.f_db_code_df = pd.DataFrame(columns=('종목코드', '종목명', '갱신날짜'))
         for i, row in self.db_code_df.iterrows():
             if keyword in row['종목코드'] + row['종목명']:
                 self.f_db_code_df = self.f_db_code_df.append(row, ignore_index=True)
@@ -165,6 +158,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.tableView.setModel(self.f_sv_view_model)
         self.tableView_2.setModel(self.f_db_view_model)
 
+    # 종목 필터(검색)을 한 뒤 table view를 갱신하는 함수
+    def filter_code_list_view(self):
+        keyword = self.lineEdit_5.text()
+        if len(keyword) == 0:
+            self.tableView.setModel(self.sv_view_model)
+            self.tableView_2.setModel(self.db_view_model)
+            return
+        self._filter_code_list_view(keyword)
 
     def timeout_1s(self):
         current_time = QTime.currentTime()
@@ -180,46 +181,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.statusbar.showMessage(statusbar_msg)
 
-    # label '종목' 우측의 lineEdit의 이벤트 핸들러
-    def codeEditChanged(self):
-        code = self.lineEdit.text()
-
-        if len(code) < 6:
-            self.lineEdit_2.setText('')
-            return
-
-        if not (code[0] == "A"):
-            code = "A" + code
-            self.lineEdit.setText(code)
-
-        name = self.objCodeMgr.get_code_name(code)
-        if len(name) == 0:
-            return
-
-        self.lineEdit_2.setText(name)
-
-    # 특정 종목(단일 종목) 데이터 가져오기
-    @decorators.return_status_msg_setter
-    def get_price_db(self, *args):
-        # GUI 에서 인자 가져오기
-        code = self.lineEdit.text()
-        tick_unit = self.comboBox.currentText()
-        tick_range = int(self.comboBox_2.currentText())
-        count = int(self.lineEdit_3.text())
-
-        if tick_unit == '일봉':  # 일봉 데이터 받기
-            if self.objStockChart.RequestDWM(code, ord('D'), count, self) == False:
-                exit()
-        elif tick_unit == '분봉':  # 분봉 데이터 받기
-            if self.objStockChart.RequestMT(code, ord('m'), tick_range, count, self) == False:
-                exit()
-
-        df = pd.DataFrame(self.rcv_data, columns=['open', 'high', 'low', 'close', 'volume'],
-                          index=self.rcv_data['date'])
-        # 뒤집어서 저장 (결과적으로 date 기준 오름차순으로 저장됨)
-        df = df.iloc[::-1]
-        with sqlite3.connect("./db/stock_price.db") as con:
-            df.to_sql(code, con, if_exists='replace', index_label='date')
+    def load_code_list(self):
+        code_list_path = self.lineEdit_8.text()
+        code_list = pd.read_csv(code_list_path, dtype=str).values.ravel()
+        self._filter_code_list_view(code_list[0], reset=True)
+        for code in code_list[1:]:
+            self._filter_code_list_view(code, reset=False)
 
     @decorators.return_status_msg_setter
     def update_price_db(self, filtered=False):
