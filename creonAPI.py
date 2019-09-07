@@ -36,7 +36,8 @@ class CpStockChart:
         rqStatus = self.objStockChart.GetDibStatus()
         rqRet = self.objStockChart.GetDibMsg1()
         if rqStatus == 0:
-            print("통신상태 정상[{}]{}".format(rqStatus, rqRet), end=' ')
+            pass
+            # print("통신상태 정상[{}]{}".format(rqStatus, rqRet), end=' ')
         else:
             print("통신상태 오류[{}]{} 종료합니다..".format(rqStatus, rqRet))
             exit()
@@ -85,7 +86,6 @@ class CpStockChart:
             rcv_oldest_date = rcv_data['date'][-1]
 
             rcv_count += rcv_batch_len
-            print('{} / {}'.format(rcv_count, count))
             caller.return_status_msg = '{} / {}'.format(rcv_count, count)
 
             # 서버가 가진 모든 데이터를 요청한 경우 break.
@@ -146,7 +146,6 @@ class CpStockChart:
             rcv_oldest_date = int('{}{:04}'.format(rcv_data['date'][-1], rcv_data['time'][-1]))
 
             rcv_count += rcv_batch_len
-            print('{} / {}'.format(rcv_count, count))
             caller.return_status_msg = '{} / {}(maximum)'.format(rcv_count, count)
 
             # 서버가 가진 모든 데이터를 요청한 경우 break.

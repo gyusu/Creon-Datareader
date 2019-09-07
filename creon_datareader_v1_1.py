@@ -3,6 +3,7 @@ import sys
 import os
 import gc
 import pandas as pd
+import tqdm
 import sqlite3
 
 from PyQt5.QtWidgets import *
@@ -14,7 +15,7 @@ import creonAPI
 import decorators
 from pandas_to_pyqt_table import PandasModel
 from creon_datareader_v1_1_ui import Ui_MainWindow
-from utils import is_market_open, available_latest_date
+from utils import is_market_open, available_latest_date, preformat_cjk
 
 # .ui 파일에서 직접 클래스 생성하는 경우 주석 해제
 # Ui_MainWindow = uic.loadUiType("creon_datareader_v0_1.ui")[0]
@@ -226,11 +227,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         with sqlite3.connect(self.db_path) as con:
             cursor = con.cursor()
-
-            for i ,(_, code) in enumerate(fetch_code_df.iterrows()):
-                self.update_status_msg = '[{}/{}]: [{}] {}'.\
-                    format(i+1, len(fetch_code_df), code[0], code[1])
-                print(self.update_status_msg)
+            tqdm_range = tqdm.trange(len(fetch_code_df), ncols=100)
+            for i in tqdm_range:
+                code = fetch_code_df.iloc[i]
+                self.update_status_msg = '[{}] {}'.format(code[0], code[1])
+                tqdm_range.set_description(preformat_cjk(self.update_status_msg, 25))
 
                 from_date = 0
                 if code[0] in self.db_code_df['종목코드'].tolist():
