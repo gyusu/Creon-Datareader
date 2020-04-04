@@ -14,11 +14,11 @@ from PyQt5 import uic
 import creonAPI
 import decorators
 from pandas_to_pyqt_table import PandasModel
-from creon_datareader_v1_1_ui import Ui_MainWindow
+from creon_datareader_ui import Ui_MainWindow
 from utils import is_market_open, available_latest_date, preformat_cjk
 
 # .ui 파일에서 직접 클래스 생성하는 경우 주석 해제
-# Ui_MainWindow = uic.loadUiType("creon_datareader_v0_1.ui")[0]
+# Ui_MainWindow = uic.loadUiType("creon_datareader.ui")[0]
 
 
 class MainWindow(QMainWindow, Ui_MainWindow):
@@ -65,9 +65,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.pushButton_3.clicked.connect(self.update_price_db_filtered)
         self.pushButton_4.clicked.connect(self.update_price_db)
 
+        # comboBox 1분/5분/일봉/... 변경될 시 실행될 함수 연결
+        self.comboBox.currentIndexChanged.connect(self.on_comboBox_changed)
 
     def closeEvent(self, a0: QtGui.QCloseEvent):
         sys.exit()
+
+    def on_comboBox_changed(self, index):
+        # 일봉인 경우만 ohlcv only 체크 해제 가능.
+        if index == 2:
+            self.checkBox.setEnabled(True)
+        else:
+            self.checkBox.setEnabled(False)
+            self.checkBox.setChecked(True)
 
     def connect_code_list_view(self):
         # 서버 종목 정보 가져와서 dataframe으로 저장
@@ -78,13 +88,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.db_path = self.lineEdit_4.text()
 
-        # .db 파일을 새로 생성할 경우에만 radioButton으로 1분/5분/일봉/.. 을 선택할 수 있게 함.
+        # .db 파일을 새로 생성할 경우에만 comboBox으로 1분/5분/일봉/.. 을 선택할 수 있게 함.
         if not os.path.isfile(self.db_path):
-            self.radioButton.setEnabled(True)
-            self.radioButton_2.setEnabled(True)
-            self.radioButton_3.setEnabled(True)
-            self.radioButton_4.setEnabled(True)
-            self.radioButton_5.setEnabled(True)
+            self.comboBox.setEnabled(True)
 
         # 로컬 DB에 저장된 종목 정보 가져와서 dataframe으로 저장
         con = sqlite3.connect(self.db_path)
@@ -106,25 +112,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if db_latest_list:
             cursor.execute("SELECT date FROM {} ORDER BY date ASC LIMIT 2".format(db_code_list[0]))
             date0, date1 = cursor.fetchall()
-            self.radioButton.setEnabled(False)
-            self.radioButton_2.setEnabled(False)
-            self.radioButton_3.setEnabled(False)
-            self.radioButton_4.setEnabled(False)
-            self.radioButton_5.setEnabled(False)
 
             # 날짜가 분 단위 인 경우
             if date0[0] > 99999999:
                 if date1[0] - date0[0] == 5: # 5분 간격인 경우
-                    self.radioButton_3.setChecked(True)
+                    self.comboBox.setCurrentIndex(1)
                 else: # 1분 간격인 경우
-
-                    self.radioButton.setChecked(True)
+                    self.comboBox.setCurrentIndex(0)
             elif date0[0]%100 == 0: # 월봉인 경우
-                self.radioButton_5.setChecked(True)
+                self.comboBox.setCurrentIndex(4)
             elif date0[0]%10 == 0: # 주봉인 경우
-                self.radioButton_4.setChecked(True)
+                self.comboBox.setCurrentIndex(3)
             else: # 일봉인 경우
-                self.radioButton_2.setChecked(True)
+                self.comboBox.setCurrentIndex(2)
 
         self.db_code_df = pd.DataFrame(
                 {'종목코드': db_code_list, '종목명': db_name_list, '갱신날짜': db_latest_list},
@@ -191,6 +191,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     @decorators.return_status_msg_setter
     def update_price_db(self, filtered=False):
+        # 다운로드 한 이후로는 설정 값 변경 불가
+        self.comboBox.setEnabled(False)
+        self.checkBox.setEnabled(False)
+        
         if filtered:
             fetch_code_df = self.f_sv_code_df
             db_code_df = self.f_db_code_df
@@ -200,29 +204,36 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if not is_market_open():
             latest_date = available_latest_date()
-            print(latest_date)
             # 이미 DB 데이터가 최신인 종목들은 가져올 목록에서 제외한다
             already_up_to_date_codes = db_code_df.loc[db_code_df['갱신날짜']==latest_date]['종목코드'].values
             fetch_code_df = fetch_code_df.loc[fetch_code_df['종목코드'].apply(lambda x: x not in already_up_to_date_codes)]
 
-        if self.radioButton.isChecked(): # 1분봉
+        if self.comboBox.currentIndex() == 0: # 1분봉
             tick_unit = '분봉'
             count = 200000  # 서버 데이터 최대 reach 약 18.5만 이므로 (18/02/25 기준)
             tick_range = 1
-        elif self.radioButton_3.isChecked(): # 5분봉
+        elif self.comboBox.currentIndex() == 1: # 5분봉
             tick_unit = '분봉'
             count = 100000
             tick_range = 5
-        elif self.radioButton_2.isChecked(): # 일봉
+        elif self.comboBox.currentIndex() == 2: # 일봉
             tick_unit = '일봉'
             count = 10000  # 10000개면 현재부터 1980년 까지의 데이터에 해당함. 충분.
             tick_range = 1
-        elif self.radioButton_4.isChecked(): # 주봉
+        elif self.comboBox.currentIndex() == 3: # 주봉
             tick_unit = '주봉'
             count = 2000
         else: # 월봉
             tick_unit = '월봉'
             count = 500
+
+        if self.checkBox.isChecked():
+            columns=['open', 'high', 'low', 'close', 'volume']
+            ohlcv_only = True
+        else:
+            columns=['open', 'high', 'low', 'close', 'volume',
+                     '상장주식수', '외국인주문한도수량', '외국인현보유수량', '외국인현보유비율', '기관순매수', '기관누적순매수']
+            ohlcv_only = False
 
 
         with sqlite3.connect(self.db_path) as con:
@@ -239,20 +250,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     from_date = cursor.fetchall()[0][0]
 
                 if tick_unit == '일봉':  # 일봉 데이터 받기
-                    if self.objStockChart.RequestDWM(code[0], ord('D'), count, self, from_date) == False:
+                    if self.objStockChart.RequestDWM(code[0], ord('D'), count, self, from_date, ohlcv_only) == False:
                         continue
                 elif tick_unit == '분봉':  # 분봉 데이터 받기
-                    if self.objStockChart.RequestMT(code[0], ord('m'), tick_range, count, self, from_date) == False:
+                    if self.objStockChart.RequestMT(code[0], ord('m'), tick_range, count, self, from_date, ohlcv_only) == False:
                         continue
                 elif tick_unit == '주봉':  #주봉 데이터 받기
-                    if self.objStockChart.RequestDWM(code[0], ord('W'), count, self, from_date) == False:
+                    if self.objStockChart.RequestDWM(code[0], ord('W'), count, self, from_date, ohlcv_only) == False:
                         continue
                 elif tick_unit == '월봉':  #주봉 데이터 받기
-                    if self.objStockChart.RequestDWM(code[0], ord('M'), count, self, from_date) == False:
+                    if self.objStockChart.RequestDWM(code[0], ord('M'), count, self, from_date, ohlcv_only) == False:
                         continue
 
-                df = pd.DataFrame(self.rcv_data, columns=['open', 'high', 'low', 'close', 'volume'],
-                                  index=self.rcv_data['date'])
+                df = pd.DataFrame(self.rcv_data, columns=columns, index=self.rcv_data['date'])
 
                 # 기존 DB와 겹치는 부분 제거
                 if from_date != 0:
