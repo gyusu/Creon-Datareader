@@ -44,7 +44,7 @@ class CpStockChart:
 
     # 차트 요청 - 최근일 부터 개수 기준
     @check_PLUS_status
-    def RequestDWM(self, code, dwm, count, caller: 'MainWindow', from_date=0):
+    def RequestDWM(self, code, dwm, count, caller: 'MainWindow', from_date=0, ohlcv_only=True):
         """
         :param code: 종목코드
         :param dwm: 'D':일봉, 'W':주봉, 'M':월봉
@@ -55,12 +55,31 @@ class CpStockChart:
         self.objStockChart.SetInputValue(0, code)  # 종목코드
         self.objStockChart.SetInputValue(1, ord('2'))  # 개수로 받기
         self.objStockChart.SetInputValue(4, count)  # 최근 count개
-        self.objStockChart.SetInputValue(5, [0, 2, 3, 4, 5, 8])  # 요청항목 - 날짜,시가,고가,저가,종가,거래량
+
+        if ohlcv_only:
+            self.objStockChart.SetInputValue(5, [0, 2, 3, 4, 5, 8])  # 요청항목 - 날짜,시가,고가,저가,종가,거래량
+            rq_column = ('date', 'open', 'high', 'low', 'close', 'volume')
+        else:
+            # 요청항목
+            self.objStockChart.SetInputValue(5, [0, # 날짜
+                                                2, # 시가
+                                                3, # 고가
+                                                4, # 저가
+                                                5, # 종가
+                                                8, # 거래량
+                                                12,  #상장주식수
+                                                14,  # 외국인주문한도수량
+                                                16,  # 외국인현보유수량
+                                                17,  # 외국인현보유비율
+                                                20,  # 기관순매수
+                                                21,  # 기관누적순매수
+                                                ])
+            # 요청한 항목들을 튜플로 만들어 사용
+            rq_column = ('date', 'open', 'high', 'low', 'close', 'volume', 
+                         '상장주식수', '외국인주문한도수량', '외국인현보유수량', '외국인현보유비율', '기관순매수', '기관누적순매수')
+
         self.objStockChart.SetInputValue(6, dwm)  # '차트 주기 - 일/주/월
         self.objStockChart.SetInputValue(9, ord('1'))  # 수정주가 사용
-
-        # 요청한 항목들을 튜플로 만들어 사용
-        rq_column = ('date', 'open', 'high', 'low', 'close', 'volume')
 
         rcv_data = {}
         for col in rq_column:
@@ -102,7 +121,7 @@ class CpStockChart:
 
     # 차트 요청 - 분간, 틱 차트
     @check_PLUS_status
-    def RequestMT(self, code, dwm, tick_range, count, caller: 'MainWindow', from_date=0):
+    def RequestMT(self, code, dwm, tick_range, count, caller: 'MainWindow', from_date=0, ohlcv_only=True):
         """
         :param code: 종목 코드
         :param dwm: 'm':분봉, 'T':틱봉
@@ -114,13 +133,32 @@ class CpStockChart:
         self.objStockChart.SetInputValue(0, code)  # 종목코드
         self.objStockChart.SetInputValue(1, ord('2'))  # 개수로 받기
         self.objStockChart.SetInputValue(4, count)  # 조회 개수
-        self.objStockChart.SetInputValue(5, [0, 1, 2, 3, 4, 5, 8])  # 요청항목 - 날짜, 시간,시가,고가,저가,종가,거래량
+        if ohlcv_only:
+            self.objStockChart.SetInputValue(5, [0, 1, 2, 3, 4, 5, 8])  # 요청항목 - 날짜, 시간,시가,고가,저가,종가,거래량
+            rq_column = ('date', 'time', 'open', 'high', 'low', 'close', 'volume')
+        else:
+            # 요청항목
+            self.objStockChart.SetInputValue(5, [0, # 날짜
+                                                1, # 시간
+                                                2, # 시가
+                                                3, # 고가
+                                                4, # 저가
+                                                5, # 종가
+                                                8, # 거래량
+                                                12,  #상장주식수
+                                                14,  # 외국인주문한도수량
+                                                16,  # 외국인현보유수량
+                                                17,  # 외국인현보유비율
+                                                20,  # 기관순매수
+                                                21,  # 기관누적순매수
+                                                ])
+            # 요청한 항목들을 튜플로 만들어 사용
+            rq_column = ('date', 'time', 'open', 'high', 'low', 'close', 'volume', 
+                         '상장주식수', '외국인주문한도수량', '외국인현보유수량', '외국인현보유비율', '기관순매수', '기관누적순매수')
+
         self.objStockChart.SetInputValue(6, dwm)  # '차트 주기 - 분/틱
         self.objStockChart.SetInputValue(7, tick_range)  # 분틱차트 주기
         self.objStockChart.SetInputValue(9, ord('1'))  # 수정주가 사용
-
-        # 요청한 항목들을 튜플로 만들어 사용
-        rq_column = ('date', 'time', 'open', 'high', 'low', 'close', 'volume')
 
         rcv_data = {}
         for col in rq_column:
