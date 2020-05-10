@@ -29,10 +29,13 @@ class CreonDatareaderCLI:
         """
         db_path: db 파일 경로.
         tick_unit: '1min', '5min', 'day'. 이미 db_path가 존재할 경우, 입력값 무시하고 기존에 사용된 값 사용.
-        ohlcv_only: ohlcv 이외의 데이터도 저장할지 여부. 이미 db_path가 존재할 경우, 입력값 무시하고 기존에 사용된 값 사용
+        ohlcv_only: ohlcv 이외의 데이터도 저장할지 여부. 이미 db_path가 존재할 경우, 입력값 무시하고 기존에 사용된 값 사용 
+                    'day' 아닌경우 False 선택 불가 고정.
         """
-        # 로컬 DB에 저장된 종목 정보 가져와서 dataframe으로 저장
-        print(db_path)
+        if tick_unit != 'day':
+            ohlcv_only = True
+
+        # 로컬 DB에 저장된 종목 정보 가져와서 dataframe으로 저장        
         con = sqlite3.connect(db_path)
         cursor = con.cursor()
 
