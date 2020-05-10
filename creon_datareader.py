@@ -93,6 +93,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.comboBox.setEnabled(True)
 
         # 로컬 DB에 저장된 종목 정보 가져와서 dataframe으로 저장
+        print(self.db_path)
         con = sqlite3.connect(self.db_path)
         cursor = con.cursor()
 
@@ -125,6 +126,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.comboBox.setCurrentIndex(3)
             else: # 일봉인 경우
                 self.comboBox.setCurrentIndex(2)
+
+            # column개수로 ohlcv_only 여부 확인
+            cursor.execute('SELECT * FROM {}'.format(db_code_list[0]))
+            column_names = [description[0] for description in cursor.description]
+            if len(column_names) > 6:  # date, o, h, l, c, v
+                self.checkBox.setEnabled(False)
+                self.checkBox.setChecked(False)
+            else:
+                self.checkBox.setEnabled(False)
+                self.checkBox.setChecked(True)
 
         self.db_code_df = pd.DataFrame(
                 {'종목코드': db_code_list, '종목명': db_name_list, '갱신날짜': db_latest_list},
@@ -202,12 +213,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             fetch_code_df = self.sv_code_df
             db_code_df = self.db_code_df
 
-        if not is_market_open():
-            latest_date = available_latest_date()
-            # 이미 DB 데이터가 최신인 종목들은 가져올 목록에서 제외한다
-            already_up_to_date_codes = db_code_df.loc[db_code_df['갱신날짜']==latest_date]['종목코드'].values
-            fetch_code_df = fetch_code_df.loc[fetch_code_df['종목코드'].apply(lambda x: x not in already_up_to_date_codes)]
-
         if self.comboBox.currentIndex() == 0: # 1분봉
             tick_unit = '분봉'
             count = 200000  # 서버 데이터 최대 reach 약 18.5만 이므로 (18/02/25 기준)
@@ -235,6 +240,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                      '상장주식수', '외국인주문한도수량', '외국인현보유수량', '외국인현보유비율', '기관순매수', '기관누적순매수']
             ohlcv_only = False
 
+        # 분봉/일봉에 대해서만 아래 코드가 효과가 있음.
+        if not is_market_open():
+            latest_date = available_latest_date()
+            if tick_unit == '일봉':
+                latest_date = latest_date // 10000
+            # 이미 DB 데이터가 최신인 종목들은 가져올 목록에서 제외한다
+            already_up_to_date_codes = db_code_df.loc[db_code_df['갱신날짜']==latest_date]['종목코드'].values
+            fetch_code_df = fetch_code_df.loc[fetch_code_df['종목코드'].apply(lambda x: x not in already_up_to_date_codes)]
 
         with sqlite3.connect(self.db_path) as con:
             cursor = con.cursor()
@@ -287,7 +300,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 app = QApplication
 
 
-def main():
+def main_gui():
     global app
     app = QApplication(sys.argv)
     mainWindow = MainWindow()
@@ -296,4 +309,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    main_gui()
