@@ -5,8 +5,8 @@ import unicodedata
 def is_market_open():
     # 장 중이면 True, 아니면 False 리턴
     now = dt.datetime.now()
-    mmhh = int('{}{}'.format(now.hour, now.minute))
-    if mmhh < 9 or mmhh > 1530:
+    mmhh = int('{}{:02}'.format(now.hour, now.minute))
+    if mmhh < 900 or mmhh > 1530:
         return False
     if now.weekday() >= 5:  # 토, 일
         return False
@@ -16,7 +16,7 @@ def is_market_open():
 
 def available_latest_date():
     now = dt.datetime.now()
-    mmhh = int('{}{}'.format(now.hour, now.minute))
+    mmhh = int('{}{:02}'.format(now.hour, now.minute))
     
     # 장중에는 최신 데이터 연속적으로 발생하므로 None 반환 
     if is_market_open():
