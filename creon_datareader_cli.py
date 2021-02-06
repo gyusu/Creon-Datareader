@@ -4,11 +4,17 @@ import os
 import gc
 import pandas as pd
 import tqdm
-import sqlite3
+import pymysql
 import argparse
 
 import creonAPI
 from utils import is_market_open, available_latest_date, preformat_cjk
+
+
+def get_db_connection():
+    return pymysql.connect(host="localhost", port=3306,
+                           user='min_data', passwd='qwerasdf12!',
+                           db='min_data', charset='utf8')
 
 
 class CreonDatareaderCLI:
@@ -36,7 +42,7 @@ class CreonDatareaderCLI:
             ohlcv_only = True
 
         # 로컬 DB에 저장된 종목 정보 가져와서 dataframe으로 저장        
-        con = sqlite3.connect(db_path)
+        con = get_db_connection()
         cursor = con.cursor()
 
         cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
@@ -110,7 +116,7 @@ class CreonDatareaderCLI:
             columns=['open', 'high', 'low', 'close', 'volume',
                      '상장주식수', '외국인주문한도수량', '외국인현보유수량', '외국인현보유비율', '기관순매수', '기관누적순매수']
 
-        with sqlite3.connect(db_path) as con:
+        with get_db_connection() as con:
             cursor = con.cursor()
             tqdm_range = tqdm.trange(len(fetch_code_df), ncols=100)
             for i in tqdm_range:

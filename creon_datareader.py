@@ -4,7 +4,7 @@ import os
 import gc
 import pandas as pd
 import tqdm
-import sqlite3
+import pymysql
 
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
@@ -19,6 +19,12 @@ from utils import is_market_open, available_latest_date, preformat_cjk
 
 # .ui 파일에서 직접 클래스 생성하는 경우 주석 해제
 # Ui_MainWindow = uic.loadUiType("creon_datareader.ui")[0]
+
+
+def get_db_connection():
+    return pymysql.connect(host="localhost", port=3306,
+                           user='min_data', passwd='qwerasdf12!',
+                           db='min_data', charset='utf8')
 
 
 class MainWindow(QMainWindow, Ui_MainWindow):
@@ -93,8 +99,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.comboBox.setEnabled(True)
 
         # 로컬 DB에 저장된 종목 정보 가져와서 dataframe으로 저장
-        print(self.db_path)
-        con = sqlite3.connect(self.db_path)
+        con = get_db_connection()
         cursor = con.cursor()
 
         cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
@@ -249,7 +254,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             already_up_to_date_codes = db_code_df.loc[db_code_df['갱신날짜']==latest_date]['종목코드'].values
             fetch_code_df = fetch_code_df.loc[fetch_code_df['종목코드'].apply(lambda x: x not in already_up_to_date_codes)]
 
-        with sqlite3.connect(self.db_path) as con:
+        with get_db_connection() as con:
             cursor = con.cursor()
             tqdm_range = tqdm.trange(len(fetch_code_df), ncols=100)
             for i in tqdm_range:
